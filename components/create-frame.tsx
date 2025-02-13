@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { createFrame } from "../actions"
+import { createFrame } from "@/app/actions"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -30,7 +30,7 @@ export function CreateFrame() {
     const result = await createFrame(frame)
     if (result.success) {
       toast.success("Frame created successfully")
-      e.currentTarget.reset()
+      // e.currentTarget.reset()
     } else {
       toast.error(result.error || "Failed to create frame")
     }

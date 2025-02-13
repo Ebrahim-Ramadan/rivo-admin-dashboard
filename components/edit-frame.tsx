@@ -1,7 +1,7 @@
 "use client"
 
 import type { Frame } from "@/types/frame"
-import { updateFrame, deleteFrame } from "../actions"
+import { updateFrame, deleteFrame } from "@/app/actions"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -41,21 +41,11 @@ export function EditFrame({ frame, onClose, onSuccess }: EditFrameProps) {
     }
   }
 
-  const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this frame?")) return
 
-    const result = await deleteFrame(frame.id)
-    if (result.success) {
-      toast.success("Frame deleted successfully")
-      onSuccess()
-    } else {
-      toast.error(result.error || "Failed to delete frame")
-    }
-  }
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Frame</DialogTitle>
         </DialogHeader>
@@ -107,9 +97,7 @@ export function EditFrame({ frame, onClose, onSuccess }: EditFrameProps) {
 
           <div className="flex justify-between">
             <Button type="submit">Update Frame</Button>
-            <Button type="button" variant="destructive" onClick={handleDelete}>
-              Delete Frame
-            </Button>
+           
           </div>
         </form>
       </DialogContent>

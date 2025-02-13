@@ -1,9 +1,12 @@
-"use server"
+"use server";
 
-import type { Frame, SearchResult } from "@/types/frame"
-import { revalidatePath } from "next/cache"
-import { kv } from "@vercel/kv"
-import { z } from "zod"
+import type { Frame, SearchResult } from "@/types/frame";
+import { revalidatePath } from "next/cache";
+import redis from "@/lib/redis";
+import { z } from "zod";
+import * as fs from 'fs';
+import * as path from 'path';
+import {frames as importedFrames} from '@/lib/combined.js';
 
 const frameSchema = z.object({
   name: z.string().min(1),
@@ -15,79 +18,147 @@ const frameSchema = z.object({
   desc: z.string().min(1),
   images: z.array(z.string()),
   keywords: z.array(z.string()),
-})
+});
 
-export async function createFrame(frame: Omit<Frame, "id">): Promise<{ success: boolean; error?: string }> {
+export async function createFrame(
+  frame: Omit<Frame, "id">,
+): Promise<{ success: boolean; error?: string }> {
   try {
-    const validation = frameSchema.safeParse(frame)
+    const validation = frameSchema.safeParse(frame);
     if (!validation.success) {
-      return { success: false, error: validation.error.message }
+      return { success: false, error: validation.error.message };
     }
 
-    const id = `frame_${Date.now()}`
-    await kv.set(`frames:${id}`, { ...frame, id })
-    await kv.sadd("frame_ids", id)
-    revalidatePath("/frames")
-    return { success: true }
+    const id = `frame_${Date.now()}`;
+    console.log('id', id);
+    
+    await redis.set(`frames:${id}`, JSON.stringify({ ...frame, id }));
+    // Removed SADD (not critical here)
+    return { success: true };
   } catch (error) {
-    return { success: false, error: "Failed to create frame" }
+    console.error("Error creating frame:", error);
+    return { success: false, error: "Failed to create frame" };
   }
 }
 
-export async function updateFrame(id: string, frame: Partial<Frame>): Promise<{ success: boolean; error?: string }> {
+export async function deleteFrame(
+  id: string,
+): Promise<{ success: boolean; error?: string }> {
   try {
-    const existing = await kv.get(`frames:${id}`)
+    await redis.del(`frames:${id}`);
+    // Removed SREM (not critical here)
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting frame:", error);
+    return { success: false, error: "Failed to delete frame" };
+  }
+}
+
+export async function updateFrame(
+  id: string,
+  frame: Partial<Frame>,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const existing = await redis.get(`frames:${id}`);
     if (!existing) {
-      return { success: false, error: "Frame not found" }
+      return { success: false, error: "Frame not found" };
     }
-
-    const updated = { ...existing, ...frame }
-    const validation = frameSchema.safeParse(updated)
+    // @ts-ignore
+    const parsedExisting = JSON.parse(existing) as Frame;
+    const updated = { ...parsedExisting, ...frame };
+    const validation = frameSchema.safeParse(updated);
     if (!validation.success) {
-      return { success: false, error: validation.error.message }
+      return { success: false, error: validation.error.message };
     }
 
-    await kv.set(`frames:${id}`, updated)
-    revalidatePath("/frames")
-    return { success: true }
+    await redis.set(`frames:${id}`, JSON.stringify(updated));
+    // revalidatePath("/frames");
+    return { success: true };
   } catch (error) {
-    return { success: false, error: "Failed to update frame" }
+    console.error("Error updating frame:", error);
+    return { success: false, error: "Failed to update frame" };
   }
 }
 
-export async function deleteFrame(id: string): Promise<{ success: boolean; error?: string }> {
+
+
+export async function searchFrames(id: string): Promise<SearchResult> {
   try {
-    await kv.del(`frames:${id}`)
-    await kv.srem("frame_ids", id)
-    revalidatePath("/frames")
-    return { success: true }
-  } catch (error) {
-    return { success: false, error: "Failed to delete frame" }
-  }
-}
-
-export async function searchFrames(query: string): Promise<SearchResult> {
-  try {
-    const ids = await kv.smembers("frame_ids")
-    const frames = await Promise.all(
-      ids.map(async (id) => {
-        const frame = await kv.get(`frames:${id}`)
-        return frame as Frame
-      }),
-    )
-
-    const filtered = frames.filter(
-      (frame) =>
-        frame.name.toLowerCase().includes(query.toLowerCase()) ||
-        frame.keywords.some((k) => k.toLowerCase().includes(query.toLowerCase())),
-    )
-
-    return {
-      frames: filtered,
-      total: filtered.length,
+    const frame = await redis.get(`frames:${id}`);
+    console.log('frame', typeof frame);
+    
+    if (frame) {
+      return {
+        frames: [frame as Frame], // Wrap the frame in an array
+        total: 1,
+      };
+    } else {
+      return { frames: [], total: 0 }; // Frame not found
     }
   } catch (error) {
-    return { frames: [], total: 0 }
+    console.error(`Error getting frame ${id}:`, error);
+    return { frames: [], total: 0 };
   }
 }
 
+
+
+
+
+export async function BatchPush(): Promise<{ success: boolean; error?: string }> {
+  try {
+
+    if (!Array.isArray(importedFrames)) {
+      console.error("Error: JSON data is not an array.");
+      return { success: false, error: "JSON data is not an array." };
+    }
+
+    // Create a pipeline
+    const pipeline = redis.pipeline();
+
+    for (let i = 0; i < importedFrames.length; i++) {
+      const frame = importedFrames[i];
+      const id = `frame_${Date.now()}_${i}`; // Generate ID here (include index for uniqueness)
+      const frameWithId = { ...frame, id };
+
+      try {
+        // Add commands to the pipeline
+        pipeline.set(`frames:${id}`, JSON.stringify(frameWithId));
+        pipeline.sadd("frame_ids", id);
+      } catch (pipelineError) {
+        console.error(`Error adding frame ${i} to pipeline:`, pipelineError);
+        return { success: false, error: `Error adding frame ${i} to pipeline: ${String(pipelineError)}` };
+      }
+    }
+
+    try {
+      // Execute the pipeline
+      const results = await pipeline.exec();
+
+      // Process the results (optional)
+      for (let i = 0; i < results.length; i += 2) {
+        const set_result = results[i];
+        const sadd_result = results[i + 1];
+        // @ts-ignore
+        if (set_result.error) {
+        // @ts-ignore
+          console.error(`Error setting frame ${i/2}: ${frames[i/2].name}. Error: ${set_result.error}`);
+        }
+        // @ts-ignore
+        if (sadd_result.error) {
+        // @ts-ignore
+          console.error(`Error adding frame ID ${i/2}: ${frames[i/2].name}. Error: ${sadd_result.error}`);
+        }
+      }
+    } catch (execError) {
+      console.error("Error executing pipeline:", execError);
+      return { success: false, error: `Error executing pipeline: ${String(execError)}` };
+    }
+
+    console.log("Finished importing frames.");
+    return { success: true };
+  } catch (error) {
+    console.error("Error importing frames:", error);
+    return { success: false, error: String(error) };
+  }
+}
