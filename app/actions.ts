@@ -21,7 +21,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-export const frameSchema = z.object({
+const frameSchema = z.object({
   name: z.string().min(1),
   price: z.string().min(1),
   sizes: z.array(z.string()),
@@ -32,7 +32,6 @@ export const frameSchema = z.object({
   images: z.array(z.string()),
   keywords: z.array(z.string()),
 });
-export type FrameSchema = z.infer<typeof frameSchema>
 
 
 export async function createFrame(
