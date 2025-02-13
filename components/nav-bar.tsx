@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
-
+import logo from "@/public/logo.webp";
 export function NavBar() {
   const router = useRouter()
 
@@ -19,7 +19,7 @@ export function NavBar() {
         {/* <h1 className="text-xl font-bold">Rivo Dashboard</h1> */}
         <div className="flex items-center gap-4">
           <Image
-            src="/logo.webp"
+            src={logo}
             alt="Rivo Logo"
             width={60}
             height={60}
