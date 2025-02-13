@@ -2,7 +2,7 @@
 
 import type { Frame, SearchResult } from "@/types/frame";
 import { z } from "zod";
-import { frames as importedFrames } from '@/lib/combined.js';
+// import { frames as importedFrames } from '@/lib/combined.js';
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, doc, setDoc, deleteDoc, getDoc, query, where, getDocs } from "firebase/firestore";
 
@@ -21,7 +21,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const frameSchema = z.object({
+export const frameSchema = z.object({
   name: z.string().min(1),
   price: z.string().min(1),
   sizes: z.array(z.string()),
@@ -104,8 +104,12 @@ export async function searchFrames(id: string): Promise<SearchResult> {
   }
 }
 
-export async function BatchPush(): Promise<{ success: boolean; error?: string }> {
+export async function BatchPush(
+  importedFrames: any[],
+): Promise<{ success: boolean; importedCount?: number; error?: string }> {
   try {
+    console.log("importedFrames", importedFrames);
+
     if (!Array.isArray(importedFrames)) {
       console.error("Error: JSON data is not an array.");
       return { success: false, error: "JSON data is not an array." };
@@ -114,17 +118,22 @@ export async function BatchPush(): Promise<{ success: boolean; error?: string }>
     const framesCollection = collection(db, "frames"); // Replace 'frames' with your collection name
 
     // Use Promise.all to await all setDoc operations
-    await Promise.all(importedFrames.map(async (frame, index) => {
-      const id = `frame_${Date.now()}_${index}`;
-      const docRef = doc(framesCollection, id); // Create a document reference with the generated ID
-      await setDoc(docRef, { ...frame, id }); // Set the data for the new document
-    }));
+    await Promise.all(
+      importedFrames.map(async (frame, index) => {
+        const id = `${Date.now()}_${index}`;
+        const docRef = doc(framesCollection, id); // Create a document reference with the generated ID
+        await setDoc(docRef, { ...frame, id }); // Set the data for the new document
+      }),
+    );
 
     console.log("Finished batch inserting frames.");
-    return { success: true };
+    return { success: true, importedCount: importedFrames.length };
   } catch (error: any) {
     console.error("Error batch inserting frames:", error);
-    return { success: false, error: `Failed to batch insert frames: ${error.message}` };
+    return {
+      success: false,
+      error: `Failed to batch insert frames: ${error.message}`,
+    };
   }
 }
 
