@@ -3,7 +3,23 @@
 import type { Frame, SearchResult } from "@/types/frame";
 import { z } from "zod";
 import { frames as importedFrames } from '@/lib/combined.js';
-import supabase from '@/lib/supabase';
+import { initializeApp } from "firebase/app";
+import { getFirestore, collection, doc, setDoc, deleteDoc, getDoc, query, where, getDocs } from "firebase/firestore";
+
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 const frameSchema = z.object({
   name: z.string().min(1),
@@ -26,23 +42,13 @@ export async function createFrame(
       return { success: false, error: validation.error.message };
     }
 
-    const { data, error } = await supabase
-      .from('frames') // Replace 'frames' with your table name
-      .insert([frame])
-      .select();
+    const framesCollection = collection(db, "frames"); // Replace 'frames' with your collection name
+    const newDocRef = doc(framesCollection); // Create a new document reference with an auto-generated ID
+    const id = newDocRef.id; // Get the auto-generated ID
+    
+    await setDoc(newDocRef, { ...frame, id }); // Set the data for the new document
 
-    if (error) {
-      console.error("Supabase error creating frame:", error);
-      return { success: false, error: `Failed to create frame: ${error.message}` };
-    }
-
-    // Assuming Supabase returns the inserted data with the ID
-    if (data && data.length > 0) {
-      // revalidatePath("/frames"); // Revalidate if needed
-      return { success: true };
-    } else {
-      return { success: false, error: "Failed to create frame (no data returned)" };
-    }
+    return { success: true };
   } catch (error: any) {
     console.error("Error creating frame:", error);
     return { success: false, error: `Failed to create frame: ${error.message}` };
@@ -53,17 +59,9 @@ export async function deleteFrame(
   id: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { error } = await supabase
-      .from('frames') // Replace 'frames' with your table name
-      .delete()
-      .eq('id', id);
+    const docRef = doc(db, "frames", id); // Replace 'frames' with your collection name
+    await deleteDoc(docRef);
 
-    if (error) {
-      console.error("Supabase error deleting frame:", error);
-      return { success: false, error: `Failed to delete frame: ${error.message}` };
-    }
-
-    // revalidatePath("/frames"); // Revalidate if needed
     return { success: true };
   } catch (error: any) {
     console.error("Error deleting frame:", error);
@@ -76,17 +74,9 @@ export async function updateFrame(
   frame: Partial<Frame>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { error } = await supabase
-      .from('frames') // Replace 'frames' with your table name
-      .update(frame)
-      .eq('id', id);
+    const docRef = doc(db, "frames", id); // Replace 'frames' with your collection name
+    await setDoc(docRef, frame, { merge: true }); // Use merge to update only the specified fields
 
-    if (error) {
-      console.error("Supabase error updating frame:", error);
-      return { success: false, error: `Failed to update frame: ${error.message}` };
-    }
-
-    // revalidatePath("/frames"); // Revalidate if needed
     return { success: true };
   } catch (error: any) {
     console.error("Error updating frame:", error);
@@ -96,19 +86,13 @@ export async function updateFrame(
 
 export async function searchFrames(id: string): Promise<SearchResult> {
   try {
-    const { data, error } = await supabase
-      .from('frames') // Replace 'frames' with your table name
-      .select('*')
-      .eq('id', id);
+    const docRef = doc(db, "frames", id); // Replace 'frames' with your collection name
+    const docSnap = await getDoc(docRef);
 
-    if (error) {
-      console.error("Supabase error searching frames:", error);
-      return { frames: [], total: 0 };
-    }
-
-    if (data && data.length > 0) {
+    if (docSnap.exists()) {
+      const data = docSnap.data() as Frame;
       return {
-        frames: data as Frame[],
+        frames: [data],
         total: 1,
       };
     } else {
@@ -127,25 +111,51 @@ export async function BatchPush(): Promise<{ success: boolean; error?: string }>
       return { success: false, error: "JSON data is not an array." };
     }
 
-    // Prepare data for insertion
-    const framesToInsert = importedFrames.map(frame => ({
-      ...frame,
-      // You might need to transform or add data here
+    const framesCollection = collection(db, "frames"); // Replace 'frames' with your collection name
+
+    // Use Promise.all to await all setDoc operations
+    await Promise.all(importedFrames.map(async (frame, index) => {
+      const id = `frame_${Date.now()}_${index}`;
+      const docRef = doc(framesCollection, id); // Create a document reference with the generated ID
+      await setDoc(docRef, { ...frame, id }); // Set the data for the new document
     }));
-
-    const { error } = await supabase
-      .from('frames') // Replace 'frames' with your table name
-      .insert(importedFrames);
-
-    if (error) {
-      console.error("Supabase error batch inserting frames:", error);
-      return { success: false, error: `Failed to batch insert frames: ${error.message}` };
-    }
 
     console.log("Finished batch inserting frames.");
     return { success: true };
   } catch (error: any) {
     console.error("Error batch inserting frames:", error);
     return { success: false, error: `Failed to batch insert frames: ${error.message}` };
+  }
+}
+
+
+
+// Fetch product details by document ID
+export async function getProductDetails(docId : any) {
+  try {
+    const docRef = doc(db, "frames", docId);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      let data = docSnap.data();
+      data.id = docSnap.id;
+       // Convert keys to lowercase and trim spaces
+       data = Object.keys(data).reduce((acc, key) => {
+        const normalizedKey = key.trim().toLowerCase();
+        //   @ts-ignore
+        acc[normalizedKey] = data[key];
+        return acc;
+      }, {});
+
+      if (data.images && typeof data.images == 'string') data.images = data.images.split(',').map(item => item.trim());
+
+
+      return data;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.error('Error fetching product details:', error);
+    return false;
   }
 }
