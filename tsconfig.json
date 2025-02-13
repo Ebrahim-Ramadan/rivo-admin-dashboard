@@ -1,4 +1,9 @@
 {
+  // "typescript.preferences.autoImportFileExecludePatterns": [
+  //   "@radix-ui/*",
+  //   "next-safe-action/*",
+  //   // "postho"
+  // ],
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,

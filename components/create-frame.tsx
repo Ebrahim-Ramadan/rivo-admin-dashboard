@@ -44,7 +44,7 @@ export function CreateFrame() {
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Name</label>
-            <Input name="name" required placeholder="do not forget the extension (eg: .png, .jpg)" />
+            <Input name="name" required  />
           </div>
 
           <div>
@@ -79,7 +79,7 @@ export function CreateFrame() {
 
           <div>
             <label className="block text-sm font-medium mb-1">Images (comma-separated)</label>
-            <Input name="images" required />
+            <Input name="images" required placeholder="do not forget the extension (eg: .png, .jpg)" />
           </div>
 
           <div>
