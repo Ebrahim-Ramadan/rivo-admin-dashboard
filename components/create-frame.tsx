@@ -38,18 +38,18 @@ export function CreateFrame() {
 
   return (
     <div className="border p-4 rounded-lg">
-      <Button onClick={() => setIsCreating(!isCreating)}>{isCreating ? "Cancel" : "Create New Frame"}</Button>
+      <Button onClick={() => setIsCreating(!isCreating)}>{isCreating ? "Cancel" : "Create A New Frame"}</Button>
 
       {isCreating && (
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Name</label>
-            <Input name="name" required  />
+            <Input name="name" required  placeholder="product name"/>
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-1">Price</label>
-            <Input name="price" required />
+            <Input name="price" required  />
           </div>
 
           <div>
@@ -87,7 +87,7 @@ export function CreateFrame() {
             <Input name="keywords" required />
           </div>
 
-          <Button type="submit">Create Frame</Button>
+          <Button type="submit">Add Frame</Button>
         </form>
       )}
     </div>

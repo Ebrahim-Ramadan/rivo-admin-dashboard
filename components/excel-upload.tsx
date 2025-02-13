@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { BatchPush } from "@/app/actions";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import LoadingDots from "./LoadingDots";
 
 // Define the schema here, to ensure it's available in this scope
 const frameSchema = z.object({
@@ -171,7 +172,7 @@ export function ExcelUpload() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold border-t-2 py-4">or Upload Files</h2>
+      <h2 className="text-xl font-semibold border-t-2 py-4">or Upload Excel Files</h2>
       {fileInfo && (
         <div className="text-sm font-bold text-green-600">
           Valid File `{fileInfo.name}`
@@ -201,15 +202,13 @@ export function ExcelUpload() {
           onChange={handleFileUpload}
           disabled={isUploading}
         />
-        {isUploading && <p className="text-sm text-gray-500">Processing...</p>}
+        {isUploading && <LoadingDots/>}
       </div>
       <p className="text-xs text-gray-500">
         Upload an Excel file with columns: name, price, sizes, type,
         categories, color, desc, images, keywords. Separate multiple values in
         a cell with commas. No empty values are allowed
       </p>
-
-      
     </div>
   );
 }
