@@ -1,17 +1,13 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 
-const ADMIN_USERNAME = "admin"
-const ADMIN_PASSWORD = "admin123"
-const AUTH_COOKIE = "auth_token"
-const TOKEN_VALUE = "authenticated" // In production, use a proper JWT token
-
 export async function POST(request: Request) {
   const body = await request.json()
   const { username, password } = body
 
-  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-    cookies().set(AUTH_COOKIE, TOKEN_VALUE, {
+  if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
+  //  @ts-ignore
+    cookies().set(process.env.AUTH_COOKIE, process.env.TOKEN_VALUE, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -25,7 +21,8 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE() {
-  cookies().delete(AUTH_COOKIE)
+  // @ts-ignore
+  cookies().delete(process.env.AUTH_COOKIE)
   return NextResponse.json({ success: true })
 }
 
