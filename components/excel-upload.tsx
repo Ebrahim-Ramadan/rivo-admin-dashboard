@@ -206,7 +206,7 @@ export function ExcelUpload() {
       <p className="text-xs text-gray-500">
         Upload an Excel file with columns: name, price, sizes, type,
         categories, color, desc, images, keywords. Separate multiple values in
-        a cell with commas.
+        a cell with commas. No empty values are allowed
       </p>
 
       
