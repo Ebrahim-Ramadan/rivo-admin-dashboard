@@ -236,9 +236,8 @@ export const Dashboard = ({  }) => {
                 <div className="flex justify-end md:block">
                 <button className="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-xl"
                   onClick={async () => {
-                    // 'use server';
                     setLoading(true);
-                    const deletedID = await markOrderAsDone(order.id);
+                    const deletedID = await handleMarkAsDone(order.id);
                     if (deletedID) {
                       toast.success('Order marked as Done successfully');
                       setLoading(false);
