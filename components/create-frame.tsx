@@ -7,12 +7,17 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import type React from "react" // Added import for React
+import Link from "next/link"
+import LoadingDots from "./LoadingDots"
 
 export function CreateFrame() {
   const [isCreating, setIsCreating] = useState(false)
+  const [loading, setloading] = useState(false)
+  const [newCreateFrame, setnewCreateFrame] = useState<string>('')
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setloading(true)
     const formData = new FormData(e.currentTarget)
 
     const frame = {
@@ -28,12 +33,15 @@ export function CreateFrame() {
     }
 
     const result = await createFrame(frame)
+    setnewCreateFrame(result.id)
     if (result.success) {
       toast.success("Frame created successfully")
       // e.currentTarget.reset()
     } else {
       toast.error(result.error || "Failed to create frame")
     }
+    setloading(false)
+
   }
 
   return (
@@ -89,6 +97,14 @@ export function CreateFrame() {
 
           <Button type="submit">Add Frame</Button>
         </form>
+      )}
+      {loading&&
+<LoadingDots/>
+}
+      {newCreateFrame && (
+       <Link href={`https://rivo.gallery/frame/${newCreateFrame}`} className='text-sm text-end text-blue-500 mt-4' target='_blank'>
+       Click to Visit at rivo.gallery
+     </Link>
       )}
     </div>
   )

@@ -36,7 +36,7 @@ const frameSchema = z.object({
 
 export async function createFrame(
   frame: Omit<Frame, "id">,
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; id?: string; error?: string }> {
   try {
     const validation = frameSchema.safeParse(frame);
     if (!validation.success) {
@@ -49,7 +49,7 @@ export async function createFrame(
     
     await setDoc(newDocRef, { ...frame, id }); // Set the data for the new document
 
-    return { success: true };
+    return { success: true , id};
   } catch (error: any) {
     console.error("Error creating frame:", error);
     return { success: false, error: `Failed to create frame: ${error.message}` };
@@ -109,7 +109,6 @@ export async function BatchPush(
   importedFrames: any[],
 ): Promise<{ success: boolean; importedCount?: number; error?: string }> {
   try {
-    console.log("importedFrames", importedFrames);
 
     if (!Array.isArray(importedFrames)) {
       console.error("Error: JSON data is not an array.");
@@ -127,7 +126,6 @@ export async function BatchPush(
       }),
     );
 
-    console.log("Finished batch inserting frames.");
     return { success: true, importedCount: importedFrames.length };
   } catch (error: any) {
     console.error("Error batch inserting frames:", error);
