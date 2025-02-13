@@ -26,7 +26,7 @@ export function EditFrame({ frame, onClose, onSuccess }: EditFrameProps) {
       sizes: (formData.get("sizes") as string).split(",").map((s) => s.trim()),
       type: formData.get("type") as string,
       categories: (formData.get("categories") as string).split(",").map((c) => c.trim()),
-      color: formData.get("color") as string,
+      color: (formData.get("color") as string).split(",").map((c) => c.trim()), // Convert color to an array of strings
       desc: formData.get("desc") as string,
       images: (formData.get("images") as string).split(",").map((i) => i.trim()),
       keywords: (formData.get("keywords") as string).split(",").map((k) => k.trim()),

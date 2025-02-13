@@ -174,8 +174,9 @@ export function ExcelUpload() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <h2 className="text-xl font-semibold border-t-2 py-4">or Upload Excel Files</h2>
+      <div className="flex flex-col gap-2 ">
       {fileInfo && (
         <div className="text-sm font-bold text-green-600">
           Valid File `{fileInfo.name}`
@@ -184,7 +185,7 @@ export function ExcelUpload() {
         </div>
       )}
       {validatedFrames && validatedFrames.length > 0 && (
-        <div className="mt-4 flex flex-col gap-2">
+        <div className=" flex flex-col gap-2 border-b-2 border-gray-300 pb-4">
           <p className="text-sm text-green-600">
             {validatedFrames.length} frames validated successfully.
           </p>
@@ -198,15 +199,46 @@ export function ExcelUpload() {
           </Button>
         </div>
       )}
-      <div className="flex items-center space-x-2">
-        <Input
-          type="file"
-          accept=".xlsx, .xls"
-          onChange={handleFileUpload}
-          disabled={isUploading}
-        />
-        {isUploading && <LoadingDots/>}
       </div>
+      <div className="flex items-center ">
+  {/* Hidden file input */}
+  <input
+    type="file"
+    accept=".xlsx, .xls"
+    onChange={handleFileUpload}
+    disabled={isUploading}
+    id="file-upload"
+    className="hidden"
+  />
+
+  {/* Custom file upload button with icon */}
+  <label
+    htmlFor="file-upload"
+    className={`w-full flex items-center justify-center py-2 text-sm font-medium rounded-lg cursor-pointer ${
+      isUploading ? "bg-gray-300 cursor-not-allowed" : "bg-black/90 hover:bg-black/80"
+    }`}
+  >
+    {/* Custom icon (you can replace this with your own icon or SVG) */}
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-5 w-5 text-white"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+      />
+    </svg>
+    <span className="ml-2 text-white">Upload File</span>
+  </label>
+</div>
+      {isUploading &&   <div className="fixed inset-0 flex justify-center items-center bg-white bg-opacity-90 z-50">
+  <LoadingDots />
+</div>}
       <p className="text-xs text-gray-500">
   Upload an Excel file with columns: name, price, sizes, type,
   categories, color, desc, images, keywords. Separate multiple values in

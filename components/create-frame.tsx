@@ -6,18 +6,29 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
-import type React from "react" // Added import for React
+import type React from "react"
 import Link from "next/link"
 import LoadingDots from "./LoadingDots"
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
 
 export function CreateFrame() {
   const [isCreating, setIsCreating] = useState(false)
-  const [loading, setloading] = useState(false)
-  const [newCreateFrame, setnewCreateFrame] = useState<string>('')
+  const [loading, setLoading] = useState(false)
+  const [newCreateFrame, setNewCreateFrame] = useState<string>('')
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [frameId, setFrameId] = useState<string>('')
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setloading(true)
+    setLoading(true)
     const formData = new FormData(e.currentTarget)
 
     const frame = {
@@ -26,22 +37,28 @@ export function CreateFrame() {
       sizes: (formData.get("sizes") as string).split(",").map((s) => s.trim()),
       type: formData.get("type") as string,
       categories: (formData.get("categories") as string).split(",").map((c) => c.trim()),
-      color: (formData.get("color") as string).split(",").map((c) => c.trim()), // Updated to be an array of strings
+      color: (formData.get("color") as string).split(",").map((c) => c.trim()),
       desc: formData.get("desc") as string,
       images: (formData.get("images") as string).split(",").map((i) => i.trim()),
       keywords: (formData.get("keywords") as string).split(",").map((k) => k.trim()),
-    };
+    }
 
     const result = await createFrame(frame)
-    setnewCreateFrame(`https://rivo.gallery/frame/${result.id}?type=${result.firsttype}&size=${result.firstsize}&color=${result.firstcolor}`)
     if (result.success) {
+      setNewCreateFrame(`https://rivo.gallery/frame/${result.id}?type=${result.firsttype}&size=${result.firstsize}&color=${result.firstcolor}`)
+      // @ts-ignore
+      setFrameId(result.id)
+      setIsDialogOpen(true)
       toast.success("Frame created successfully")
-      // e.currentTarget.reset()
     } else {
       toast.error(result.error || "Failed to create frame")
     }
-    setloading(false)
+    setLoading(false)
+  }
 
+  const handleCopyId = () => {
+    navigator.clipboard.writeText(frameId)
+    toast.success("Frame ID copied to clipboard")
   }
 
   return (
@@ -52,12 +69,12 @@ export function CreateFrame() {
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Name</label>
-            <Input name="name" required  placeholder="product name"/>
+            <Input name="name" required placeholder="product name" />
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-1">Price</label>
-            <Input name="price" required  />
+            <Input name="price" required />
           </div>
 
           <div>
@@ -94,19 +111,33 @@ export function CreateFrame() {
             <label className="block text-sm font-medium mb-1">Keywords (comma-separated)</label>
             <Input name="keywords" required />
           </div>
-{!loading && <Button type="submit">Add Frame</Button>}
-          {/* <Button type="submit">Add Frame</Button> */}
+
+          {!loading && <Button type="submit">Add Frame</Button>}
         </form>
       )}
-      {loading&&
-<LoadingDots/>
-}
-      {newCreateFrame && (
-       <Link href={newCreateFrame} className='text-sm flex justify-end text-blue-500 mt-2' target='_blank'>
-       Click to Visit at rivo.gallery
-     </Link>
+
+      {loading && (
+        <div className="fixed inset-0 flex justify-center items-center bg-white bg-opacity-90 z-50">
+          <LoadingDots />
+        </div>
       )}
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Frame Created Successfully</DialogTitle>
+            <DialogDescription>
+              Your frame has been created. You can copy the frame ID or visit the product page.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button  onClick={handleCopyId}>Copy Frame ID</Button>
+            <Link href={newCreateFrame} target="_blank">
+              <Button variant="outline">Visit Product on Rivo</Button>
+            </Link>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
-
