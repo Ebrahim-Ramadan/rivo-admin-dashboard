@@ -25,19 +25,22 @@ export function SearchFrames() {
     const result = await deleteFrame(id)
     if (result.success) {
       toast.success("Frame deleted successfully")
-      // onSuccess()
+      setResults((prevResults) =>
+          prevResults.filter((frame) => frame.id !== id)
+        );
     } else {
       toast.error(result.error || "Failed to delete frame")
     }
   }
   return (
     <div className="space-y-4">
+      
       <div className="flex gap-2">
-        <Input type="text" placeholder="Search frames..." value={query} onChange={(e) => setQuery(e.target.value)} />
+        <Input type="text" placeholder="Enter Frame ID..." value={query} onChange={(e) => setQuery(e.target.value)} />
         <Button onClick={handleSearch}>Search</Button>
       </div>
 
-      {results.length > 0 ? (
+      {results.length > 0 && (
         <div className="grid gap-4">
           {results.map((frame) => (
             <div key={frame.id} className="border p-4 rounded-lg">
@@ -54,10 +57,12 @@ export function SearchFrames() {
             </div>
           ))}
         </div>
-      ):
-      (
-        <p className="text-center">No Frames Found</p>
       )
+      // :
+      // (
+      //   query.trim()!=''&&
+      //   <p className="text-center">No Frames Found</p>
+      // )
       }
 
       {selectedFrame && (

@@ -1,12 +1,9 @@
 "use server";
 
 import type { Frame, SearchResult } from "@/types/frame";
-import { revalidatePath } from "next/cache";
-import redis from "@/lib/redis";
 import { z } from "zod";
-import * as fs from 'fs';
-import * as path from 'path';
-import {frames as importedFrames} from '@/lib/combined.js';
+import { frames as importedFrames } from '@/lib/combined.js';
+import supabase from '@/lib/supabase';
 
 const frameSchema = z.object({
   name: z.string().min(1),
@@ -29,15 +26,26 @@ export async function createFrame(
       return { success: false, error: validation.error.message };
     }
 
-    const id = `frame_${Date.now()}`;
-    console.log('id', id);
-    
-    await redis.set(`frames:${id}`, JSON.stringify({ ...frame, id }));
-    // Removed SADD (not critical here)
-    return { success: true };
-  } catch (error) {
+    const { data, error } = await supabase
+      .from('frames') // Replace 'frames' with your table name
+      .insert([frame])
+      .select();
+
+    if (error) {
+      console.error("Supabase error creating frame:", error);
+      return { success: false, error: `Failed to create frame: ${error.message}` };
+    }
+
+    // Assuming Supabase returns the inserted data with the ID
+    if (data && data.length > 0) {
+      // revalidatePath("/frames"); // Revalidate if needed
+      return { success: true };
+    } else {
+      return { success: false, error: "Failed to create frame (no data returned)" };
+    }
+  } catch (error: any) {
     console.error("Error creating frame:", error);
-    return { success: false, error: "Failed to create frame" };
+    return { success: false, error: `Failed to create frame: ${error.message}` };
   }
 }
 
@@ -45,12 +53,21 @@ export async function deleteFrame(
   id: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await redis.del(`frames:${id}`);
-    // Removed SREM (not critical here)
+    const { error } = await supabase
+      .from('frames') // Replace 'frames' with your table name
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error("Supabase error deleting frame:", error);
+      return { success: false, error: `Failed to delete frame: ${error.message}` };
+    }
+
+    // revalidatePath("/frames"); // Revalidate if needed
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error deleting frame:", error);
-    return { success: false, error: "Failed to delete frame" };
+    return { success: false, error: `Failed to delete frame: ${error.message}` };
   }
 }
 
@@ -59,106 +76,76 @@ export async function updateFrame(
   frame: Partial<Frame>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const existing = await redis.get(`frames:${id}`);
-    if (!existing) {
-      return { success: false, error: "Frame not found" };
-    }
-    // @ts-ignore
-    const parsedExisting = JSON.parse(existing) as Frame;
-    const updated = { ...parsedExisting, ...frame };
-    const validation = frameSchema.safeParse(updated);
-    if (!validation.success) {
-      return { success: false, error: validation.error.message };
+    const { error } = await supabase
+      .from('frames') // Replace 'frames' with your table name
+      .update(frame)
+      .eq('id', id);
+
+    if (error) {
+      console.error("Supabase error updating frame:", error);
+      return { success: false, error: `Failed to update frame: ${error.message}` };
     }
 
-    await redis.set(`frames:${id}`, JSON.stringify(updated));
-    // revalidatePath("/frames");
+    // revalidatePath("/frames"); // Revalidate if needed
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error updating frame:", error);
-    return { success: false, error: "Failed to update frame" };
+    return { success: false, error: `Failed to update frame: ${error.message}` };
   }
 }
 
-
-
 export async function searchFrames(id: string): Promise<SearchResult> {
   try {
-    const frame = await redis.get(`frames:${id}`);
-    console.log('frame', typeof frame);
-    
-    if (frame) {
+    const { data, error } = await supabase
+      .from('frames') // Replace 'frames' with your table name
+      .select('*')
+      .eq('id', id);
+
+    if (error) {
+      console.error("Supabase error searching frames:", error);
+      return { frames: [], total: 0 };
+    }
+
+    if (data && data.length > 0) {
       return {
-        frames: [frame as Frame], // Wrap the frame in an array
+        frames: data as Frame[],
         total: 1,
       };
     } else {
       return { frames: [], total: 0 }; // Frame not found
     }
-  } catch (error) {
-    console.error(`Error getting frame ${id}:`, error);
+  } catch (error: any) {
+    console.error("Error searching frames:", error);
     return { frames: [], total: 0 };
   }
 }
 
-
-
-
-
 export async function BatchPush(): Promise<{ success: boolean; error?: string }> {
   try {
-
     if (!Array.isArray(importedFrames)) {
       console.error("Error: JSON data is not an array.");
       return { success: false, error: "JSON data is not an array." };
     }
 
-    // Create a pipeline
-    const pipeline = redis.pipeline();
+    // Prepare data for insertion
+    const framesToInsert = importedFrames.map(frame => ({
+      ...frame,
+      // You might need to transform or add data here
+    }));
 
-    for (let i = 0; i < importedFrames.length; i++) {
-      const frame = importedFrames[i];
-      const id = `frame_${Date.now()}_${i}`; // Generate ID here (include index for uniqueness)
-      const frameWithId = { ...frame, id };
+    const { error } = await supabase
+      .from('frames') // Replace 'frames' with your table name
+      .insert(importedFrames);
 
-      try {
-        // Add commands to the pipeline
-        pipeline.set(`frames:${id}`, JSON.stringify(frameWithId));
-        pipeline.sadd("frame_ids", id);
-      } catch (pipelineError) {
-        console.error(`Error adding frame ${i} to pipeline:`, pipelineError);
-        return { success: false, error: `Error adding frame ${i} to pipeline: ${String(pipelineError)}` };
-      }
+    if (error) {
+      console.error("Supabase error batch inserting frames:", error);
+      return { success: false, error: `Failed to batch insert frames: ${error.message}` };
     }
 
-    try {
-      // Execute the pipeline
-      const results = await pipeline.exec();
-
-      // Process the results (optional)
-      for (let i = 0; i < results.length; i += 2) {
-        const set_result = results[i];
-        const sadd_result = results[i + 1];
-        // @ts-ignore
-        if (set_result.error) {
-        // @ts-ignore
-          console.error(`Error setting frame ${i/2}: ${frames[i/2].name}. Error: ${set_result.error}`);
-        }
-        // @ts-ignore
-        if (sadd_result.error) {
-        // @ts-ignore
-          console.error(`Error adding frame ID ${i/2}: ${frames[i/2].name}. Error: ${sadd_result.error}`);
-        }
-      }
-    } catch (execError) {
-      console.error("Error executing pipeline:", execError);
-      return { success: false, error: `Error executing pipeline: ${String(execError)}` };
-    }
-
-    console.log("Finished importing frames.");
+    console.log("Finished batch inserting frames.");
     return { success: true };
-  } catch (error) {
-    console.error("Error importing frames:", error);
-    return { success: false, error: String(error) };
+  } catch (error: any) {
+    console.error("Error batch inserting frames:", error);
+    return { success: false, error: `Failed to batch insert frames: ${error.message}` };
   }
 }
