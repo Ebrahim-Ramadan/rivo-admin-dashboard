@@ -26,14 +26,14 @@ export function CreateFrame() {
       sizes: (formData.get("sizes") as string).split(",").map((s) => s.trim()),
       type: formData.get("type") as string,
       categories: (formData.get("categories") as string).split(",").map((c) => c.trim()),
-      color: formData.get("color") as string,
+      color: (formData.get("color") as string).split(",").map((c) => c.trim()), // Updated to be an array of strings
       desc: formData.get("desc") as string,
       images: (formData.get("images") as string).split(",").map((i) => i.trim()),
       keywords: (formData.get("keywords") as string).split(",").map((k) => k.trim()),
-    }
+    };
 
     const result = await createFrame(frame)
-    setnewCreateFrame(result.id)
+    setnewCreateFrame(`https://rivo.gallery/frame/${result.id}?type=${result.firsttype}&size=${result.firstsize}&color=${result.firstcolor}`)
     if (result.success) {
       toast.success("Frame created successfully")
       // e.currentTarget.reset()
@@ -76,7 +76,7 @@ export function CreateFrame() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Color</label>
+            <label className="block text-sm font-medium mb-1">Colors (comma-separated)</label>
             <Input name="color" required />
           </div>
 
@@ -94,15 +94,15 @@ export function CreateFrame() {
             <label className="block text-sm font-medium mb-1">Keywords (comma-separated)</label>
             <Input name="keywords" required />
           </div>
-
-          <Button type="submit">Add Frame</Button>
+{!loading && <Button type="submit">Add Frame</Button>}
+          {/* <Button type="submit">Add Frame</Button> */}
         </form>
       )}
       {loading&&
 <LoadingDots/>
 }
       {newCreateFrame && (
-       <Link href={`https://rivo.gallery/frame/${newCreateFrame}`} className='text-sm text-end text-blue-500 mt-4' target='_blank'>
+       <Link href={newCreateFrame} className='text-sm flex justify-end text-blue-500 mt-2' target='_blank'>
        Click to Visit at rivo.gallery
      </Link>
       )}

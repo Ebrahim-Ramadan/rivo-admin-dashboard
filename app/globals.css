@@ -79,3 +79,26 @@ body {
     @apply text-xs font-bold text-blue-200 p-2 hover:text-white rounded-xl bg-blue-600 cursor-pointer
   }
 }
+
+
+
+:root {
+  scroll-padding: 0;
+}
+/* width */
+::-webkit-scrollbar {
+  height: 0;
+  width: 0;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  height: 0;
+  border-radius: 0;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  height: 0;
+  border-radius: 0;
+}

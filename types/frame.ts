@@ -5,7 +5,7 @@ export interface Frame {
   sizes: string[]
   type: string
   categories: string[]
-  color: string
+  color: string[]
   desc: string
   images: string[]
   keywords: string[]

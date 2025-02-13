@@ -27,7 +27,7 @@ const frameSchema = z.object({
   sizes: z.array(z.string()),
   type: z.string().min(1),
   categories: z.array(z.string()),
-  color: z.string().min(1),
+  color: z.array(z.string()),
   desc: z.string().min(1),
   images: z.array(z.string()),
   keywords: z.array(z.string()),
@@ -36,20 +36,21 @@ const frameSchema = z.object({
 
 export async function createFrame(
   frame: Omit<Frame, "id">,
-): Promise<{ success: boolean; id?: string; error?: string }> {
+): Promise<{ success: boolean; id?: string; error?: string, firsttype?: string, firstsize?: string, firstcolor?: string }> {
   try {
     const validation = frameSchema.safeParse(frame);
     if (!validation.success) {
       return { success: false, error: validation.error.message };
     }
-
+    console.log('frame',frame)
+    
     const framesCollection = collection(db, "frames"); // Replace 'frames' with your collection name
     const newDocRef = doc(framesCollection); // Create a new document reference with an auto-generated ID
     const id = newDocRef.id; // Get the auto-generated ID
     
     await setDoc(newDocRef, { ...frame, id }); // Set the data for the new document
 
-    return { success: true , id};
+    return { success: true , id, firsttype:frame.type, firstsize: frame.sizes[0], firstcolor : frame.color[0] };
   } catch (error: any) {
     console.error("Error creating frame:", error);
     return { success: false, error: `Failed to create frame: ${error.message}` };

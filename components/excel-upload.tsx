@@ -17,7 +17,7 @@ const frameSchema = z.object({
   sizes: z.array(z.string()),
   type: z.string().min(1),
   categories: z.array(z.string()),
-  color: z.string().min(1),
+  color:  z.array(z.string()),
   desc: z.string().min(1),
   images: z.array(z.string()),
   keywords: z.array(z.string()),
@@ -84,7 +84,10 @@ export function ExcelUpload() {
             .split(",")
             .map((c: string) => c.trim())
             .filter(Boolean),
-          color: (row.color || "").trim(),
+          color: (row.color || "") // Updated to split into an array
+            .split(",")
+            .map((c: string) => c.trim())
+            .filter(Boolean),
           desc: (row.desc || "").trim(),
           images: (row.images || "")
             .split(",")
@@ -205,10 +208,10 @@ export function ExcelUpload() {
         {isUploading && <LoadingDots/>}
       </div>
       <p className="text-xs text-gray-500">
-        Upload an Excel file with columns: name, price, sizes, type,
-        categories, color, desc, images, keywords. Separate multiple values in
-        a cell with commas. No empty values are allowed
-      </p>
+  Upload an Excel file with columns: name, price, sizes, type,
+  categories, color, desc, images, keywords. Separate multiple values in
+  a cell with commas. No empty values are allowed.
+</p>
     </div>
   );
 }
