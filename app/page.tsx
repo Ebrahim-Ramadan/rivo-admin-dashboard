@@ -3,6 +3,7 @@
 
 import { SearchFrames } from "@/components/search-frames";
 import { CreateFrame } from "@/components/create-frame";
+import { ExcelUpload } from "@/components/excel-upload";
 // import { BatchPush } from "./actions";
 // import { useTransition } from 'react';
 
@@ -25,6 +26,7 @@ export default function Home() {
       <div className="grid gap-8">
         <SearchFrames />
         <CreateFrame />
+        <ExcelUpload/>
       </div>
     </main>
   );

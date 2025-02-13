@@ -32,6 +32,8 @@ export const frameSchema = z.object({
   images: z.array(z.string()),
   keywords: z.array(z.string()),
 });
+export type FrameSchema = z.infer<typeof frameSchema>
+
 
 export async function createFrame(
   frame: Omit<Frame, "id">,
