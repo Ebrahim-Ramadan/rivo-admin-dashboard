@@ -22,6 +22,41 @@ export function CreateFrame() {
     e.preventDefault()
     setLoading(true)
     const formData = new FormData(e.currentTarget)
+    const imageFiles = formData.getAll("images") as File[]
+
+    // Convert files to base64 and upload them
+    const imageNames = await Promise.all(
+      imageFiles.map(async (file) => {
+        const fileName = `${Date.now()}-${file.name}`
+  
+        // Convert file to base64
+        const base64File = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.readAsDataURL(file)
+          reader.onload = () => resolve(reader.result as string)
+          reader.onerror = (error) => reject(error)
+        })
+  
+        // Upload the file
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ fileName, file: base64File }),
+        })
+  
+        if (!response.ok) {
+          throw new Error("Failed to upload image")
+        }
+  
+        return fileName
+      })
+    )
+  
+
+console.log('imageNames', imageNames)
+
 
     const frame = {
       name: formData.get("name") as string,
@@ -31,7 +66,7 @@ export function CreateFrame() {
       categories: (formData.get("categories") as string).split(",").map((c) => c.trim()),
       color: (formData.get("color") as string).split(",").map((c) => c.trim()),
       desc: formData.get("desc") as string,
-      images: (formData.get("images") as string).split(",").map((i) => i.trim()),
+      images: imageNames,
       keywords: (formData.get("keywords") as string).split(",").map((k) => k.trim()),
     }
 
@@ -91,7 +126,8 @@ export function CreateFrame() {
 
           <div>
             <label className="block text-sm font-medium mb-1">Images (comma-separated)</label>
-            <Input name="images" required placeholder="do not forget the extension (eg: .png, .jpg)" />
+            <Input name="images" type="file" multiple required />
+            {/* <Input name="images" required placeholder="do not forget the extension (eg: .png, .jpg)" /> */}
           </div>
 
           <div>
