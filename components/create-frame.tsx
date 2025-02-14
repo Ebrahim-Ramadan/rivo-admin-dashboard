@@ -9,8 +9,33 @@ import { toast } from "sonner"
 import type React from "react"
 import LoadingDots from "./LoadingDots"
 import { supabase } from "@/lib/supabase"
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select" // Import Select components from shadcn
 
 const FrameCreatedDialog = lazy(() => import("./FrameCreatedDialog"))
+
+// Define the array of category options
+const categoryOptions = [
+  'movies',
+  'series',
+  'musics',
+  'Ar Musics',
+  'superheroes',
+  'Cars',
+  'Art',
+  'Sports',
+  'posters set',
+  'cairokee frames',
+  'Classic Old Films',
+  'frame sets',
+  'Framed vinyls',
+  'vinyls'
+]
 
 export function CreateFrame() {
   const [isCreating, setIsCreating] = useState(false)
@@ -18,6 +43,7 @@ export function CreateFrame() {
   const [newCreateFrame, setNewCreateFrame] = useState<string>('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [frameId, setFrameId] = useState<string>('')
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]) // State to store selected categories
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -30,7 +56,6 @@ export function CreateFrame() {
     const uploadedImageUrls = await Promise.all(
       imageFiles.map(async (file) => {
         const fileName = `${Date.now()}-${file.name}`
-        // const filePath = `${fileName}`
   
         // Upload the file to Supabase Storage
         const { error } = await supabase.storage
@@ -45,13 +70,12 @@ export function CreateFrame() {
       })
     )
 
-  
     const frame = {
       name: formData.get("name") as string,
       price: formData.get("price") as string,
       sizes: (formData.get("sizes") as string).split(",").map((s) => s.trim()),
       type: formData.get("type") as string,
-      categories: (formData.get("categories") as string).split(",").map((c) => c.trim()),
+      categories: selectedCategories, // Use the selected categories from state
       color: (formData.get("color") as string).split(",").map((c) => c.trim()),
       desc: formData.get("desc") as string,
       images: uploadedImageUrls, // Store the public URLs of the uploaded images
@@ -98,8 +122,23 @@ export function CreateFrame() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Categories (comma-separated)</label>
-            <Input name="categories" required />
+            <label className="block text-sm font-medium mb-1">Categories</label>
+            <Select
+              onValueChange={(value) => {
+                setSelectedCategories((prev) => [...prev, value]) // Add selected category to state
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select categories" />
+              </SelectTrigger>
+              <SelectContent>
+                {categoryOptions.map((category, index) => (
+                  <SelectItem key={index} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
@@ -139,7 +178,6 @@ export function CreateFrame() {
           frameUrl={newCreateFrame}
         />
       </Suspense>
-
     </div>
   )
 }
