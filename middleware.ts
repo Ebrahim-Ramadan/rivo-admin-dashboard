@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-const AUTH_COOKIE = "auth_token"
-const TOKEN_VALUE = "authenticated"
 
 export function middleware(request: NextRequest) {
   // Public paths that don't require authentication
@@ -12,8 +10,9 @@ export function middleware(request: NextRequest) {
   }
 
   // Check for authentication cookie
-  const authToken = request.cookies.get(AUTH_COOKIE)
-  const isAuthenticated = authToken?.value === TOKEN_VALUE
+  // @ts-ignore
+  const authToken = request.cookies.get(process.env.AUTH_COOKIE)
+  const isAuthenticated = authToken?.value === process.env.TOKEN_VALUE
 
   // If not authenticated, redirect to sign-in
   if (!isAuthenticated) {

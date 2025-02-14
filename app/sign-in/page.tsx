@@ -5,13 +5,16 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import LoadingDots from "@/components/LoadingDots"
 
 export default function SignIn() {
   const router = useRouter()
   const [error, setError] = useState("")
+  const [loading, setloading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setloading(true)
     const formData = new FormData(e.currentTarget)
 
     const response = await fetch("/api/auth", {
@@ -28,6 +31,11 @@ export default function SignIn() {
     } else {
       setError("Invalid credentials")
     }
+    setTimeout(() => {
+    setloading(false)
+      
+    }, 1000);
+
   }
 
   return (
@@ -52,10 +60,15 @@ export default function SignIn() {
               <Input id="password" name="password" type="password" required placeholder="••••••••" />
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
-            <Button type="submit" className="w-full">
-              Sign In
-            </Button>
-          </form>
+            {loading?
+            <div className="flex justify-center w-full"><LoadingDots/></div>
+            :
+              <Button type="submit" className="w-full" disabled={loading}>
+                Sign In
+              </Button>
+            }
+
+      </form>
         </CardContent>
       </Card>
     </div>

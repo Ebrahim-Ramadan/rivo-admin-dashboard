@@ -1,23 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { lazy, Suspense, useState } from "react"
 import { createFrame } from "@/app/actions"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import type React from "react"
-import Link from "next/link"
 import LoadingDots from "./LoadingDots"
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog"
+
+const FrameCreatedDialog = lazy(() => import("./FrameCreatedDialog"))
 
 export function CreateFrame() {
   const [isCreating, setIsCreating] = useState(false)
@@ -54,11 +46,6 @@ export function CreateFrame() {
       toast.error(result.error || "Failed to create frame")
     }
     setLoading(false)
-  }
-
-  const handleCopyId = () => {
-    navigator.clipboard.writeText(frameId)
-    toast.success("Frame ID copied to clipboard")
   }
 
   return (
@@ -121,23 +108,15 @@ export function CreateFrame() {
           <LoadingDots />
         </div>
       )}
+      <Suspense fallback={<LoadingDots />}>
+        <FrameCreatedDialog
+          isOpen={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          frameId={frameId}
+          frameUrl={newCreateFrame}
+        />
+      </Suspense>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Frame Created Successfully</DialogTitle>
-            <DialogDescription>
-              Your frame has been created. You can copy the frame ID or visit the product page.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button  onClick={handleCopyId}>Copy Frame ID</Button>
-            <Link href={newCreateFrame} target="_blank">
-              <Button variant="outline">Visit Product on Rivo</Button>
-            </Link>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
