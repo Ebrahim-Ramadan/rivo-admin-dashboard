@@ -33,17 +33,18 @@ export function CreateFrame() {
         // const filePath = `${fileName}`
   
         // Upload the file to Supabase Storage
-        const { data, error } = await supabase.storage
-          .from("frames") // Replace with your bucket name
+        const { error } = await supabase.storage
+          .from("frames") 
           .upload(fileName, file)
   
         if (error) {
           throw new Error(`Failed to upload image: ${error.message}`)
         }
+  
         return fileName
       })
     )
-  console.log('uploadedImageUrls', uploadedImageUrls)
+
   
     const frame = {
       name: formData.get("name") as string,
