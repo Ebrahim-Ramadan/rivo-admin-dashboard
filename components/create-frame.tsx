@@ -79,7 +79,10 @@ export function CreateFrame() {
       color: (formData.get("color") as string).split(",").map((c) => c.trim()),
       desc: formData.get("desc") as string,
       images: uploadedImageUrls, // Store the public URLs of the uploaded images
-      keywords: (formData.get("keywords") as string).split(",").map((k) => k.trim()),
+      keywords:(formData.get("keywords") as string)
+       .split(",")
+       .map((k) => k.trim())
+       .flatMap((keyword) => generatePrefixes(keyword)),
     }
   
     const result = await createFrame(frame)
@@ -180,4 +183,11 @@ export function CreateFrame() {
       </Suspense>
     </div>
   )
+}
+function generatePrefixes(str: string) {
+  const prefixes = [];
+  for (let i = 1; i <= str.length; i++) {
+    prefixes.push(str.substring(0, i));
+  }
+  return prefixes;
 }
