@@ -123,9 +123,8 @@ export function CreateFrame() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Images (comma-separated)</label>
+            <label className="block text-sm font-medium mb-1">Images</label>
             <Input name="images" type="file" multiple required accept="image/*" />
-            {/* <Input name="images" required placeholder="do not forget the extension (eg: .png, .jpg)" /> */}
           </div>
 
           <div>
