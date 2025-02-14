@@ -94,8 +94,9 @@ export function ExcelUpload() {
             .map((i: string) => i.trim())
             .filter(Boolean),
           keywords: (row.keywords || "")
-            .split(",")
-            .map((k: string) => k.trim())
+          .split(",")
+          .map((k : string) => k.trim())
+          .flatMap((keyword : string) => generatePrefixes(keyword))
             .filter(Boolean),
         };
         return frame;
@@ -246,4 +247,16 @@ export function ExcelUpload() {
 </p>
     </div>
   );
+}
+
+
+
+
+
+function generatePrefixes(str: string) {
+  const prefixes = [];
+  for (let i = 1; i <= str.length; i++) {
+    prefixes.push(str.substring(0, i));
+  }
+  return prefixes;
 }
