@@ -34,7 +34,7 @@ export default function SignIn() {
     setTimeout(() => {
     setloading(false)
       
-    }, 1000);
+    }, 2000);
 
   }
 

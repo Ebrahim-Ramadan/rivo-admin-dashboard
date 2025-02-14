@@ -43,12 +43,14 @@ export async function createFrame(
       return { success: false, error: validation.error.message };
     }
     console.log('frame',frame)
+    const frameWithPriority = { ...frame, priority: true };
+
     
     const framesCollection = collection(db, "frames"); // Replace 'frames' with your collection name
     const newDocRef = doc(framesCollection); // Create a new document reference with an auto-generated ID
     const id = newDocRef.id; // Get the auto-generated ID
     
-    await setDoc(newDocRef, { ...frame, id }); // Set the data for the new document
+    await setDoc(newDocRef, { ...frameWithPriority, id }); // Set the data for the new document
 
     return { success: true , id, firsttype:frame.type, firstsize: frame.sizes[0], firstcolor : frame.color[0] };
   } catch (error: any) {
@@ -123,7 +125,8 @@ export async function BatchPush(
       importedFrames.map(async (frame, index) => {
         const id = `${Date.now()}_${index}`;
         const docRef = doc(framesCollection, id); // Create a document reference with the generated ID
-        await setDoc(docRef, { ...frame, id }); // Set the data for the new document
+        const frameWithPriority = { ...frame, priority: true };
+        await setDoc(docRef, { ...frameWithPriority, id }); // Set the data for the new document
       }),
     );
 
