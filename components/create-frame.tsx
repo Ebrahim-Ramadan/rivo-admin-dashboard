@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import type React from "react"
 import LoadingDots from "./LoadingDots"
+import { supabase } from "@/lib/supabase"
 
 const FrameCreatedDialog = lazy(() => import("./FrameCreatedDialog"))
 
@@ -21,41 +22,29 @@ export function CreateFrame() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
+  
     const formData = new FormData(e.currentTarget)
     const imageFiles = formData.getAll("images") as File[]
-
-    // Convert files to base64 and upload them
-    const imageNames = await Promise.all(
+  
+    // Upload images to Supabase Storage
+    const uploadedImageUrls = await Promise.all(
       imageFiles.map(async (file) => {
         const fileName = `${Date.now()}-${file.name}`
+        // const filePath = `${fileName}`
   
-        // Convert file to base64
-        const base64File = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader()
-          reader.readAsDataURL(file)
-          reader.onload = () => resolve(reader.result as string)
-          reader.onerror = (error) => reject(error)
-        })
+        // Upload the file to Supabase Storage
+        const { data, error } = await supabase.storage
+          .from("frames") // Replace with your bucket name
+          .upload(fileName, file)
   
-        // Upload the file
-        const response = await fetch("/api/upload", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ fileName, file: base64File }),
-        })
-  
-        if (!response.ok) {
-          throw new Error("Failed to upload image")
+        if (error) {
+          throw new Error(`Failed to upload image: ${error.message}`)
         }
-  
         return fileName
       })
     )
+  console.log('uploadedImageUrls', uploadedImageUrls)
   
-
-
     const frame = {
       name: formData.get("name") as string,
       price: formData.get("price") as string,
@@ -64,10 +53,10 @@ export function CreateFrame() {
       categories: (formData.get("categories") as string).split(",").map((c) => c.trim()),
       color: (formData.get("color") as string).split(",").map((c) => c.trim()),
       desc: formData.get("desc") as string,
-      images: imageNames,
+      images: uploadedImageUrls, // Store the public URLs of the uploaded images
       keywords: (formData.get("keywords") as string).split(",").map((k) => k.trim()),
     }
-
+  
     const result = await createFrame(frame)
     if (result.success) {
       setNewCreateFrame(`https://rivo.gallery/frame/${result.id}?type=${result.firsttype}&size=${result.firstsize}&color=${result.firstcolor}`)
@@ -86,7 +75,7 @@ export function CreateFrame() {
       <Button onClick={() => setIsCreating(!isCreating)}>{isCreating ? "Cancel" : "Create A New Frame"}</Button>
 
       {isCreating && (
-        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-4 space-y-4" encType="multipart/form-data">
           <div>
             <label className="block text-sm font-medium mb-1">Name</label>
             <Input name="name" required placeholder="product name" />
