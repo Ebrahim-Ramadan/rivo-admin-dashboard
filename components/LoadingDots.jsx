@@ -1,4 +1,3 @@
-
 const LoadingDots = () => {
     return (
       <div aria-label="Loading..." role="status" className="flex items-center space-x-2 ">
@@ -22,5 +21,6 @@ const LoadingDots = () => {
     );
   };
   
+
   export default LoadingDots;
   
