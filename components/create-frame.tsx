@@ -55,8 +55,6 @@ export function CreateFrame() {
     )
   
 
-console.log('imageNames', imageNames)
-
 
     const frame = {
       name: formData.get("name") as string,
@@ -126,7 +124,7 @@ console.log('imageNames', imageNames)
 
           <div>
             <label className="block text-sm font-medium mb-1">Images (comma-separated)</label>
-            <Input name="images" type="file" multiple required />
+            <Input name="images" type="file" multiple required accept="image/*" />
             {/* <Input name="images" required placeholder="do not forget the extension (eg: .png, .jpg)" /> */}
           </div>
 
