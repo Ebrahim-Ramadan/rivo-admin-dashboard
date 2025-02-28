@@ -21,20 +21,20 @@ const FrameCreatedDialog = lazy(() => import("./FrameCreatedDialog"))
 
 // Define the array of category options
 const categoryOptions = [
-  'movies',
-  'series',
-  'musics',
+  'Movies',
+  'Series',
+  'Musics',
   'Ar Musics',
-  'superheroes',
+  'Superheroes',
   'Cars',
   'Art',
   'Sports',
   'posters set',
   'cairokee frames',
   'Classic Old Films',
-  'frame sets',
+  'Frame sets',
   'Framed vinyls',
-  'vinyls'
+  'Vinyls'
 ]
 
 export function CreateFrame() {
