@@ -100,7 +100,7 @@ export function CreateFrame() {
 
   return (
     <div className="border p-4 rounded-lg">
-      <Button onClick={() => setIsCreating(!isCreating)}>{isCreating ? "Cancel" : "Create A New Frame"}</Button>
+      <Button onClick={() => setIsCreating(!isCreating)}>{isCreating ? "Cancel" : "Create A New Product"}</Button>
 
       {isCreating && (
         <form onSubmit={handleSubmit} className="mt-4 space-y-4" encType="multipart/form-data">
@@ -164,7 +164,7 @@ export function CreateFrame() {
             <Input name="keywords" required />
           </div>
 
-          {!loading && <Button type="submit">Add Frame</Button>}
+          {!loading && <Button type="submit">Add Product</Button>}
         </form>
       )}
 

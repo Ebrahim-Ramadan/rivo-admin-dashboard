@@ -47,7 +47,7 @@ export function EditFrame({ frame, onClose, onSuccess }: EditFrameProps) {
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Frame</DialogTitle>
+          <DialogTitle>Edit Product</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -96,7 +96,7 @@ export function EditFrame({ frame, onClose, onSuccess }: EditFrameProps) {
           </div>
 
           <div className="flex justify-between">
-            <Button type="submit">Update Frame</Button>
+            <Button type="submit">Update Product</Button>
            
           </div>
         </form>

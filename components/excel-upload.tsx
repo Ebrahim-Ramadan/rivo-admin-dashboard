@@ -126,7 +126,7 @@ export function ExcelUpload() {
           );
         });
         toast.error(
-          `${invalidFrames.length} number of frames failed validation. check for the criteria with the developer (me).`,
+          `${invalidFrames.length} number of products failed validation. check for the criteria with the developer (me).`,
         );
         setInvalidFramesCount(invalidFrames.length);
       } else {
@@ -134,7 +134,7 @@ export function ExcelUpload() {
       }
 
       if (validFrames.length === 0 && invalidFrames.length > 0) {
-        toast.error("No valid frames found in the uploaded file.");
+        toast.error("No valid products found in the uploaded file.");
         setValidatedFrames(null);
         return;
       }
@@ -152,7 +152,7 @@ export function ExcelUpload() {
 
   const handlePushToDatabase = async () => {
     if (!validatedFrames || validatedFrames.length === 0) {
-      toast.error("No valid frames to upload.");
+      toast.error("No valid products to upload.");
       return;
     }
 
@@ -160,11 +160,11 @@ export function ExcelUpload() {
     try {
       const resUpload = await BatchPush(validatedFrames);
       if (resUpload.success) {
-        toast.success(`Successfully uploaded ${resUpload.importedCount} frames`);
+        toast.success(`Successfully uploaded ${resUpload.importedCount} products`);
         setValidatedFrames(null);
         setFileInfo(null);
       } else {
-        toast.error("Failed to upload frames.");
+        toast.error("Failed to upload products.");
       }
     } catch (error: any) {
       console.error("Error during BatchPush:", error);
@@ -188,11 +188,11 @@ export function ExcelUpload() {
       {validatedFrames && validatedFrames.length > 0 && (
         <div className=" flex flex-col gap-2 border-b-2 border-gray-300 pb-4">
           <p className="text-sm text-green-600">
-            {validatedFrames.length} frames validated successfully.
+            {validatedFrames.length} products validated successfully.
           </p>
           {invalidFramesCount > 0 && (
             <p className="text-sm text-red-600">
-              {invalidFramesCount} frames failed validation.
+              {invalidFramesCount} products failed validation.
             </p>
           )}
           <Button onClick={handlePushToDatabase} disabled={isUploading}>

@@ -38,7 +38,7 @@ export function SearchFrames() {
         <a href="ordersshit" className="navbararrow">ORDERS &#8594;</a>
       </div>
       <div className="flex gap-2">
-        <Input type="text" placeholder="Enter Frame ID..." value={query} onChange={(e) => setQuery(e.target.value)} />
+        <Input type="text" placeholder="Enter Product ID..." value={query} onChange={(e) => setQuery(e.target.value)} />
         <Button onClick={handleSearch}>Search</Button>
       </div>
 
