@@ -3,7 +3,7 @@
 import { SearchFrames } from "@/components/search-frames";
 import { CreateFrame } from "@/components/create-frame";
 import { ExcelUpload } from "@/components/excel-upload";
-import { Ass } from "@/components/ass";
+// import { Ass } from "@/components/ass";
 
 
 export default function Home() {
@@ -17,7 +17,7 @@ export default function Home() {
         <CreateFrame />
         <ExcelUpload/>
       </div>
-      <Ass/>
+      {/* <Ass/> */}
     </main>
   );
 }
