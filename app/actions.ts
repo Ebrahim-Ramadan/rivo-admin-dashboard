@@ -172,39 +172,3 @@ export async function getProductDetails(docId : any) {
   }
 }
 
-
-
-async function updateVinylsToVinyl() {
-  try {
-    // Reference to the frames collection
-    const framesRef = collection(db, 'frames');
-
-    // Get all documents in the frames collection
-    const snapshot = await getDocs(framesRef);
-
-    // Iterate over each document
-    snapshot.forEach(async (doc) => {
-      const data = doc.data();
-
-      // Check if the categorized array exists and contains 'vinyls'
-      if (data.categorized && data.categorized.includes('vinyls')) {
-        // Create a new array with 'vinyls' replaced by 'Vinyls'
-        const updatedCategorized = data.categorized.map((item) =>
-          item === 'vinyls' ? 'Vinyls' : item
-        );
-
-        // Update the document with the new categorized array
-        const docRef = doc(db, 'frames', doc.id);
-        await updateDoc(docRef, {
-          categorized: updatedCategorized,
-        });
-
-        console.log(`Updated document ${doc.id}`);
-      }
-    });
-
-    console.log('All documents have been processed.');
-  } catch (error) {
-    console.error('Error updating documents: ', error);
-  }
-}
