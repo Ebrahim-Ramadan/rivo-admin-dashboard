@@ -34,7 +34,8 @@ const categoryOptions = [
   'Classic Old Films',
   'Frame sets',
   'Framed vinyls',
-  'Vinyls'
+  'Vinyls',
+  "Rivo & Davnci"
 ]
 
 export function CreateFrame() {
