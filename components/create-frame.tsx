@@ -41,6 +41,7 @@ const categoryOptions = [
 export function CreateFrame() {
   const [isCreating, setIsCreating] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, seterror] = useState("")
   const [newCreateFrame, setNewCreateFrame] = useState<string>('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [frameId, setFrameId] = useState<string>('')
@@ -87,6 +88,8 @@ export function CreateFrame() {
     }
   
     const result = await createFrame(frame)
+    console.log('result', result)
+    
     if (result.success) {
       setNewCreateFrame(`https://rivo.gallery/frame/${result.id}?type=${result.firsttype}&size=${result.firstsize}&color=${result.firstcolor}`)
       // @ts-ignore
@@ -94,6 +97,7 @@ export function CreateFrame() {
       setIsDialogOpen(true)
       toast.success("Frame created successfully")
     } else {
+      seterror(result.error || "Failed to create frame")
       toast.error(result.error || "Failed to create frame")
     }
     setLoading(false)
@@ -169,6 +173,11 @@ export function CreateFrame() {
         </form>
       )}
 
+      {error.length>0 && (
+        <div className="fixed inset-0 flex justify-center items-center bg-white text-red-500 z-50">
+          {error}
+        </div>
+      )}
       {loading && (
         <div className="fixed inset-0 flex justify-center items-center bg-white bg-opacity-90 z-50">
           <LoadingDots />
