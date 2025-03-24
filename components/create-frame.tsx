@@ -35,7 +35,7 @@ const categoryOptions = [
   'Frame sets',
   'Framed vinyls',
   'Vinyls',
-  "Rivo & Davnci"
+  "Rivo and Davnci"
 ]
 
 export function CreateFrame() {
