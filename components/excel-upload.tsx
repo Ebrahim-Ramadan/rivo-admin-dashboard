@@ -57,9 +57,13 @@ export function ExcelUpload() {
         "keywords",
       ];
       const firstRow = jsonData[0] as Record<string, any>;
-      const missingColumns = requiredColumns.filter(
-        (column) => !firstRow?.hasOwnProperty(column),
+      const trimmedFirstRowKeys = Object.keys(firstRow || {}).map((key) =>
+        key.trim().toLowerCase(),
       );
+      const missingColumns = requiredColumns.filter(
+        (column) => !trimmedFirstRowKeys.includes(column.toLowerCase()),
+      );
+      console.log("missingColumns", missingColumns);
 
       if (missingColumns.length > 0) {
         toast.error(
